@@ -1,0 +1,56 @@
+Описание работы с библиотекой.
+1. Опредяляем пины мк к которым подключены сегменты индикатора, заполнив структуру segments_t.
+Пример:
+segments_t segments = {
+  .port_seg_A = seg_A_GPIO_Port,
+  .pin_seg_A = seg_A_Pin,
+  .port_seg_B = seg_B_GPIO_Port,
+  .pin_seg_B = seg_B_Pin,
+  .port_seg_C = seg_C_GPIO_Port,
+  .pin_seg_C = seg_C_Pin,
+  .port_seg_D = seg_D_GPIO_Port,
+  .pin_seg_D = seg_D_Pin,
+  .port_seg_E = seg_E_GPIO_Port,
+  .pin_seg_E = seg_E_Pin,
+  .port_seg_F = seg_F_GPIO_Port,
+  .pin_seg_F = seg_F_Pin,
+  .port_seg_G = seg_G_GPIO_Port,
+  .pin_seg_G = seg_G_Pin,
+  .port_seg_Point = seg_DP_GPIO_Port,
+  .pin_seg_Point = seg_DP_Pin,
+};
+2. Создаём необходимое количество индикаторов, создавая экземпляр структуры indicator_t.
+Пример:
+indicator_t ind_H = { .port = ind_Hundred_GPIO_Port, .pin = ind_Hundred_Pin };
+indicator_t ind_D = { .port = ind_Tens_GPIO_Port, .pin = ind_Tens_Pin };
+indicator_t ind_E = { .port = ind_Edin_GPIO_Port, .pin = ind_Edin_Pin};
+создали три индикатора.
+
+3.Далее, чтобы управлять выводом на индикаторы служат функции:
+enable_indicator(indicator_t *indicator, uint16_t inverse) - функция включения индикатора 1. аргумент структура определения индикатора, 2. какой сигнал на базе транзистора 0-управление индикатором +, 1-управление индикатором -
+disable_indicator(indicator_t *indicator, uint16_t inverse) - функция включения индикатора 1. аргумент структура определения индикатора, 2. какой сигнал на базе транзистора 0-управление индикатором +, 1-управление индикатором -
+Пример:
+enable_indicator(&ind_H, 0);
+disable_indicator(&ind_H, 0);
+
+4.Для записи данных на индикатор служит функция:
+write_code(uint16_t value, segments_t *seg, uint16_t point_en, uint16_t type)
+Функция вывода значения на сегменты индикатора. 1-аргумент значение для отображения, 2-структура определения сегментов, 3-точка вкл(POINT_OFF) выкл(POINT_ON), 4-тип индикатора OK-общий катод, OA-общий анод
+Пример:
+enable_indicator(&ind_H, 0);
+write_code(7, &segments, POINT_OFF, OK); - на индикатор выведится цифра 7
+
+5.Библиотека поддерживает вывод следующих данных:
+Цифры: от 0 до 9
+Буквы: A, b, C, d, E, F, G, H, i, J, L, o, P, q, U.
+буквы для отображения передаются в любом регистре write_code('A', &segments, POINT_OFF, OK); write_code('a', &segments, POINT_OFF, OK);
+Знаки: '-', градус, '-|', '|-'
+знак '-' так и передаётся write_code('-', &segments, POINT_OFF, OK);
+знак градуса передаётся цифровым кодом 129 write_code(129, &segments, POINT_OFF, OK);
+знак '-|' передаётся цифровым кодом 130
+знак '|-' передаётся цифровым кодом 131
+6. В библиотеке определены следующие константы:
+POINT_OFF выключение точки
+POINT_ON  включение точки
+OK-общий катод
+OA-общий анод
