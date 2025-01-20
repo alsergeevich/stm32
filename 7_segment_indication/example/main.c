@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2024 STMicroelectronics.
+  * Copyright (c) 2025 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -21,38 +21,34 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "dinamic_led.h" //подключаем библиотеку
+#include "dinamic_led.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 //создаём структуру в которой указываем к каким портам и пинам подключены сегменты индикатора
-segments_t segments = { .port_seg_A = seg_A_GPIO_Port,
-                        .pin_seg_A = seg_A_Pin,
-                        .port_seg_B = seg_B_GPIO_Port,
-                        .pin_seg_B = seg_B_Pin,
-                        .port_seg_C = seg_C_GPIO_Port,
-                        .pin_seg_C = seg_C_Pin,
-                        .port_seg_D = seg_D_GPIO_Port,
-                        .pin_seg_D = seg_D_Pin,
-                        .port_seg_E = seg_E_GPIO_Port,
-                        .pin_seg_E = seg_E_Pin,
-                        .port_seg_F = seg_F_GPIO_Port,
-                        .pin_seg_F = seg_F_Pin,
-                        .port_seg_G = seg_G_GPIO_Port,
-                        .pin_seg_G = seg_G_Pin,
-                        .port_seg_Point = seg_P_GPIO_Port,
-                        .pin_seg_Point = seg_P_Pin, };
+segments_t segments = {
+  .port_seg_A = seg_A_GPIO_Port,
+  .pin_seg_A = seg_A_Pin,
+  .port_seg_B = seg_B_GPIO_Port,
+  .pin_seg_B = seg_B_Pin,
+  .port_seg_C = seg_C_GPIO_Port,
+  .pin_seg_C = seg_C_Pin,
+  .port_seg_D = seg_D_GPIO_Port,
+  .pin_seg_D = seg_D_Pin,
+  .port_seg_E = seg_E_GPIO_Port,
+  .pin_seg_E = seg_E_Pin,
+  .port_seg_F = seg_F_GPIO_Port,
+  .pin_seg_F = seg_F_Pin,
+  .port_seg_G = seg_G_GPIO_Port,
+  .pin_seg_G = seg_G_Pin,
+  .port_seg_Point = seg_DP_GPIO_Port,
+  .pin_seg_Point = seg_DP_Pin,
+};
 
-indicator_t ind1 = { .port = Ind_1_GPIO_Port, .pin = Ind_1_Pin, }; //создаём структуру первого индикатора
-
-indicator_t ind2 = { .port = Ind_2_GPIO_Port, .pin = Ind_2_Pin, }; //создаём структуру второго индикатора
-
-indicator_t ind3 = { .port = Ind_3_GPIO_Port, .pin = Ind_3_Pin, }; //создаём структуру третьего индикатора
-
-// таким образом можно создать сколько надо индикаторов
-
+indicator_t ind_H = { .port = ind_Hundred_GPIO_Port, .pin = ind_Hundred_Pin };
+indicator_t ind_D = { .port = ind_Tens_GPIO_Port, .pin = ind_Tens_Pin };
+indicator_t ind_E = { .port = ind_Edin_GPIO_Port, .pin = ind_Edin_Pin};
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -66,7 +62,7 @@ indicator_t ind3 = { .port = Ind_3_GPIO_Port, .pin = Ind_3_Pin, }; //созда�
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim11; //подключаем таймер 11
+TIM_HandleTypeDef htim11;
 
 /* USER CODE BEGIN PV */
 
@@ -84,10 +80,46 @@ static void MX_TIM11_Init(void);
 /* USER CODE BEGIN 0 */
 volatile uint16_t switch_seg = 0; //для переключения сегментов
 
-uint16_t val1 = 0; //единицы
-uint16_t val2 = 0; //десятки
-uint16_t val3 = 0; //сотни
-volatile uint16_t value = 0;
+uint16_t hundred = 'A'; //сотни
+uint16_t tens = 'L'; //десятки
+uint16_t edin = 'P'; //единицы
+
+
+
+void HAL_TIM_PeriodElapsedCallback(const TIM_HandleTypeDef *htim) {
+  if (htim->Instance == TIM11) {
+    //этого можно не делать
+    disable_indicator(&ind_H, 0); //гасим индикатор 1
+    disable_indicator(&ind_D, 0); //гасим индикатор 2
+    disable_indicator(&ind_E, 0); //гасим индикатор 3
+
+    switch (switch_seg) { //перебираем индикаторы
+      case 0:               //если очередь индикатора 1
+        enable_indicator(&ind_H, 0);  //включаем индикатор 1
+      disable_indicator(&ind_D, 0); //выключаем индикатор 2
+      disable_indicator(&ind_E, 0); //выключаем индикатор 3
+      write_code(hundred, &segments, POINT_OFF, OK); //выводим на сегменты число val1, точка выключена, тип индикатора общий катод
+      break;
+      case 1: //если очередь индикатора 2
+        disable_indicator(&ind_H, 0); //выключаем индикатор 1
+      enable_indicator(&ind_D, 0);  //включаем индикатор 2
+      disable_indicator(&ind_E, 0); //выключаем индикатор 3
+      write_code(tens, &segments, POINT_OFF, OK); //выводим на сегменты число val2, точка выключена, тип индикатора общий катод
+      break;
+      case 2: //если очередь индикатора 3
+        disable_indicator(&ind_H, 0); //выключаем индикатор 1
+      disable_indicator(&ind_D, 0); //выключаем индикатор 2
+      enable_indicator(&ind_E, 0); //включаем индикатор 3
+      write_code(edin, &segments, POINT_OFF, OK); //выводим на сегменты число val3, точка включена, тип индикатора общий катод
+      break;
+    }
+
+    switch_seg++;
+    if (switch_seg > 2) { //если дошли до 3 индикатора, то обнуляемся и снова
+      switch_seg = 0;
+    }
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -96,6 +128,7 @@ volatile uint16_t value = 0;
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -120,25 +153,14 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
-	__HAL_TIM_CLEAR_FLAG(&htim11, TIM_SR_UIF);
-	HAL_TIM_Base_Start_IT(&htim11); //запускаем таймер в режиме прерываний (в настройках не забываем включить прерывания)
+  __HAL_TIM_CLEAR_FLAG(&htim11, TIM_SR_UIF);
+  HAL_TIM_Base_Start_IT(&htim11); //запускаем таймер в режиме прерываний (в настройках не забываем включить прерывания)
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		value += 11; //тестовый код для проверки, просто изменяющееся в цикле число
-		if (value < 999) {
-			//раскладываем число на единицы, десятки, сотни
-			val1 = value % 10;
-			val2 = (value / 10) % 10;
-			val3 = (value / 100);
-		} else {
-			value = 0;
-		}
-		HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin); //показываем, что можем в цикле моргать светиком одновременно с выводом чисел на индикацию
-		HAL_Delay(200);
 
     /* USER CODE END WHILE */
 
@@ -236,22 +258,22 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, seg_A_Pin|seg_B_Pin|seg_C_Pin|seg_D_Pin
-                          |seg_E_Pin|seg_F_Pin|seg_G_Pin|seg_P_Pin, GPIO_PIN_RESET);
+                          |seg_E_Pin|seg_F_Pin|seg_G_Pin|seg_DP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_Pin|Ind_1_Pin|Ind_2_Pin|Ind_3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, ind_Hundred_Pin|ind_Tens_Pin|ind_Edin_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : seg_A_Pin seg_B_Pin seg_C_Pin seg_D_Pin
-                           seg_E_Pin seg_F_Pin seg_G_Pin seg_P_Pin */
+                           seg_E_Pin seg_F_Pin seg_G_Pin seg_DP_Pin */
   GPIO_InitStruct.Pin = seg_A_Pin|seg_B_Pin|seg_C_Pin|seg_D_Pin
-                          |seg_E_Pin|seg_F_Pin|seg_G_Pin|seg_P_Pin;
+                          |seg_E_Pin|seg_F_Pin|seg_G_Pin|seg_DP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : LED_Pin Ind_1_Pin Ind_2_Pin Ind_3_Pin */
-  GPIO_InitStruct.Pin = LED_Pin|Ind_1_Pin|Ind_2_Pin|Ind_3_Pin;
+  /*Configure GPIO pins : ind_Hundred_Pin ind_Tens_Pin ind_Edin_Pin */
+  GPIO_InitStruct.Pin = ind_Hundred_Pin|ind_Tens_Pin|ind_Edin_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -263,41 +285,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-//колбэк функция обработки прерывания по переполнению таймера 11 тут происходит вся магия динамической индикации
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-
-	//этого можно не делать
-	disable_indicator(&ind1, 0); //гасим индикатор 1
-	disable_indicator(&ind2, 0); //гасим индикатор 2
-	disable_indicator(&ind3, 0); //гасим индикатор 3
-
-	switch (switch_seg) { //перебираем индикаторы
-	case 0:               //если очередь индикатора 1
-		enable_indicator(&ind1, 0);  //включаем индикатор 1
-		disable_indicator(&ind2, 0); //выключаем индикатор 2
-		disable_indicator(&ind3, 0); //выключаем индикатор 3
-		write_code(val1, &segments, 0, 0); //выводим на сегменты число val1, точка выключена, тип индикатора общий катод
-		break;
-	case 1: //если очередь индикатора 2
-		disable_indicator(&ind1, 0); //выключаем индикатор 1
-		enable_indicator(&ind2, 0);  //включаем индикатор 2
-		disable_indicator(&ind3, 0); //выключаем индикатор 3
-		write_code(val2, &segments, 0, 0); //выводим на сегменты число val2, точка выключена, тип индикатора общий катод
-		break;
-	case 2: //если очередь индикатора 3
-		disable_indicator(&ind1, 0); //выключаем индикатор 1
-		disable_indicator(&ind2, 0); //выключаем индикатор 2
-		enable_indicator(&ind3, 0); //включаем индикатор 3
-		write_code(val3, &segments, 1, 0); //выводим на сегменты число val3, точка включена, тип индикатора общий катод
-		break;
-	}
-
-	switch_seg++;
-	if (switch_seg > 2) { //если дошли до 3 индикатора то обнуляемся и по-новой
-		switch_seg = 0;
-	}
-
-}
 /* USER CODE END 4 */
 
 /**
