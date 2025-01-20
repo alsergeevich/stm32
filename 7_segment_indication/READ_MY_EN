@@ -1,0 +1,72 @@
+Description of Working with the Library
+Define the microcontroller pins to which the segments of the indicator are connected by filling in the segments_t structure.
+Example:
+segments_t segments = {
+  .port_seg_A = seg_A_GPIO_Port,
+  .pin_seg_A = seg_A_Pin,
+  .port_seg_B = seg_B_GPIO_Port,
+  .pin_seg_B = seg_B_Pin,
+  .port_seg_C = seg_C_GPIO_Port,
+  .pin_seg_C = seg_C_Pin,
+  .port_seg_D = seg_D_GPIO_Port,
+  .pin_seg_D = seg_D_Pin,
+  .port_seg_E = seg_E_GPIO_Port,
+  .pin_seg_E = seg_E_Pin,
+  .port_seg_F = seg_F_GPIO_Port,
+  .pin_seg_F = seg_F_Pin,
+  .port_seg_G = seg_G_GPIO_Port,
+  .pin_seg_G = seg_G_Pin,
+  .port_seg_Point = seg_DP_GPIO_Port,
+  .pin_seg_Point = seg_DP_Pin,
+};
+
+Create the necessary number of indicators by creating instances of the indicator_t structure.
+Example:
+indicator_t ind_H = { .port = ind_Hundred_GPIO_Port, .pin = ind_Hundred_Pin };
+indicator_t ind_D = { .port = ind_Tens_GPIO_Port, .pin = ind_Tens_Pin };
+indicator_t ind_E = { .port = ind_Edin_GPIO_Port, .pin = ind_Edin_Pin };
+This creates three indicators.
+
+To control the output to the indicators, use the following functions:
+enable_indicator(indicator_t *indicator, uint16_t inverse) - function to enable the indicator.
+Argument: structure defining the indicator,
+Signal at the transistor base: 0 - control indicator +, 1 - control indicator -.
+disable_indicator(indicator_t *indicator, uint16_t inverse) - function to disable the indicator.
+Argument: structure defining the indicator,
+Signal at the transistor base: 0 - control indicator +, 1 - control indicator -.
+Example:
+enable_indicator(&ind_H, 0);
+disable_indicator(&ind_H, 0);
+
+To write data to the indicator, use the function:
+write_code(uint16_t value, segments_t *seg, uint16_t point_en, uint16_t type)
+This function outputs a value to the segments of the indicator.
+Argument: value to display,
+Structure defining the segments,
+Point enable (POINT_OFF) or disable (POINT_ON),
+Type of indicator: OK - common cathode, OA - common anode.
+Example:
+enable_indicator(&ind_H, 0);
+write_code(7, &segments, POINT_OFF, OK); // The number 7 will be displayed on the indicator.
+
+The library supports the output of the following data:
+Digits: from 0 to 9
+Letters: A, b, C, d, E, F, G, H, i, J, L, o, P, q, U.
+Letters for display can be passed in any case:
+write_code('A', &segments, POINT_OFF, OK);
+write_code('a', &segments, POINT_OFF, OK);
+
+Symbols: '-', degree, '-|', '|-'
+The symbol '-' is passed as is:
+write_code('-', &segments, POINT_OFF, OK);
+
+The degree symbol is passed using the digital code 129:
+write_code(129, &segments, POINT_OFF, OK);
+
+The symbol '-|' is passed using the digital code 130, and the symbol '|-' is passed using the digital code 131.
+
+The library defines the following constants:
+POINT_OFF - disable the point
+POINT_ON - enable the point
+OK - common cathode
+OA - common anode
