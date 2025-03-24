@@ -2,11 +2,7 @@
 #define MENU_H
 
 #include <stdio.h>
-#ifdef _WIN32
-#include <conio.h> // Для функции _getch() в винде
-#else
-#include <stdlib.h>
-#endif
+
 
 #define STAСK_SIZE 5
 #define KEY_UP 1
