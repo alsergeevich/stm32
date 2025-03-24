@@ -1,6 +1,13 @@
 #ifndef MENU_H
 #define MENU_H
 
+#include <stdio.h>
+#ifdef _WIN32
+#include <conio.h> // Для функции _getch() в винде
+#else
+#include <stdlib.h>
+#endif
+
 #define STAСK_SIZE 5
 #define KEY_UP 1
 #define KEY_DOWN 2
@@ -34,7 +41,7 @@ void menu_init(menu_context_t *ctx, menu_item_t *root_menu);
 void menu_display(const menu_context_t *ctx, void(*display_callback)(const char*, int, int));
 void menu_handle_input(menu_context_t *ctx, int input);
 
-int calculate_menu_length(menu_item_t *menu);
+int calculate_menu_length(const menu_item_t *menu);
 
 
 #endif //MENU_H
