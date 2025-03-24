@@ -24,21 +24,18 @@ void display_callback(const char *title, int index, int is_selected) {
 
 // Пример функции для получения пользовательского ввода
 int get_user_input() {
-#ifdef _WIN32
-    char ch = _getch();
-#else
-    char ch = (char) getchar();
-#endif
+    char ch = getchar();
+    if (ch != '\n') getchar();
     switch (ch) {
-    case 'w': return KEY_UP;    // Стрелка вверх
-    case 's': return KEY_DOWN;  // Стрелка вниз
+    case 'w': return KEY_UP;     // Стрелка вверх
+    case 's': return KEY_DOWN;   // Стрелка вниз
     case '\n': return KEY_ENTER; // Enter
-    case 'b': return KEY_BACK;  // Back
-    default: return -1;         // Некорректный ввод
+    case 'b': return KEY_BACK;   // Back
+    default: return -1;          // Некорректный ввод
     }
 }
 
-[[noreturn]] void main() {
+[[noreturn]] int main() {
     // Создание подменю
     menu_item_t submenu_items[] = {
         {"Subitem 1", action_item_3, nullptr},
@@ -66,8 +63,8 @@ int get_user_input() {
         // Отображение текущего меню
         menu_display(&ctx, display_callback);
 
-        // Получение пользовательского ввода
         int input = get_user_input();
+
         if (input == -1) {
             printf("\nIncorrect input. Try again.\n");
             continue;
@@ -75,6 +72,8 @@ int get_user_input() {
 
         // Обработка ввода
         menu_handle_input(&ctx, input);
+
+        // Получение пользовательского ввода
         printf("\n");
     }
 }

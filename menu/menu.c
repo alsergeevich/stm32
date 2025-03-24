@@ -118,5 +118,4 @@ void menu_handle_input(menu_context_t *ctx, int input) {
         case KEY_ENTER: menu_enter(ctx);     break;
         case KEY_BACK:  menu_back(ctx);      break;
     }
-    getchar();
 }
