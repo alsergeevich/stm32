@@ -37,7 +37,7 @@ void menu_init(menu_context_t *ctx, menu_item_t *root_menu);
 void menu_display(const menu_context_t *ctx, void(*display_callback)(const char*, int, int));
 void menu_handle_input(menu_context_t *ctx, int input);
 
-int calculate_menu_length(const menu_item_t *menu);
+//int calculate_menu_length(const menu_item_t *menu);
 
 
 #endif //MENU_H
