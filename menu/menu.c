@@ -64,19 +64,23 @@ void menu_enter(menu_context_t *ctx) {
                 if(ctx->stack_top < STAСK_SIZE - 1) { //проверяем не переполнен ли стек переходов
                     ctx->stack_top++; //увеличиваем счётчик переходов
                     ctx->stack[ctx->stack_top] = ctx->current_menu; //сохраняем в стек текущий пункт меню для возврата
+
+                    ctx->current_menu = selected_item->submenu; //переходим в подменю
+                    ctx->selected_index = 0; //устанавливаем начальное положение в меню
+                    return;
                 }
-                ctx->current_menu = selected_item->submenu; //переходим в подменю
-                ctx->selected_index = 0; //устанавливаем начальное положение в меню
-                return;
+
             } else if(selected_item->function_action != NULL && selected_item->submenu != NULL) { //если пункт имеет и действие и подменю
                 selected_item->function_action(); //выполняем действие
                 if(ctx->stack_top < STAСK_SIZE - 1) { //переходим в подменю
                     ctx->stack_top++;
                     ctx->stack[ctx->stack_top] = ctx->current_menu;
+
+                    ctx->current_menu = selected_item->submenu;
+                    ctx->selected_index = 0;
+                    return;
                 }
-                ctx->current_menu = selected_item->submenu;
-                ctx->selected_index = 0;
-                return;
+
             }
 
         }
